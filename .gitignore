@@ -1,0 +1,33 @@
+# Build packages
+*.zip
+
+# Local environment variables
+.env
+backend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Python dependencies / environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+backend/database.db
+
+# Node dependencies
+frontend/node_modules/
+/node_modules/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# OS files
+.DS_Store
+Thumbs.db
