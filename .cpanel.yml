@@ -1,7 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/djucnxxj/public_html/
-    - /bin/rsync -amv frontend/dist/ $DEPLOYPATH
-    - export BACKENDPATH=/home/djucnxxj/tlc_backend/
-    - /bin/rsync -amv --exclude='database.db' --exclude='__pycache__' --exclude='.pytest_cache' backend/ $BACKENDPATH
+    - /bin/rsync -amv frontend/dist/ /home/djucnxxj/public_html/
+    - /bin/rsync -amv --exclude='database.db' --exclude='__pycache__' --exclude='.pytest_cache' backend/ /home/djucnxxj/tlc_backend/
