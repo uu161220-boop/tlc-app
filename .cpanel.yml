@@ -1,7 +1,6 @@
 ---
 deployment:
   tasks:
-    - /bin/rsync -amv frontend/dist/ /home/djucnxxj/public_html/
-    - /bin/rsync -amv --exclude='database.db' --exclude='__pycache__' --exclude='.pytest_cache' backend/ /home/djucnxxj/tlc_backend/
-    - /home/djucnxxj/virtualenv/tlc_backend/3.11/bin/pip install --force-reinstall pandas yfinance
-    - /bin/touch /home/djucnxxj/tlc_backend/tmp/restart.txt
+    - cp -rf frontend/dist/* /home/djucnxxj/public_html/consilindo.biz.id/tlc_yatz/
+    - cp -rf backend/* /home/djucnxxj/tlc_backend/
+    - touch /home/djucnxxj/tlc_backend/tmp/restart.txt
