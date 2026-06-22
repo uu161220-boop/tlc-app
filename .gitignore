@@ -31,3 +31,18 @@ frontend/node_modules/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Frontend build outputs
+assets/
+index.html
+favicon.svg
+icons.svg
+
+# Temp PHP and diagnostic files
+*.php
+*.phtml
+*.php5
+*.php7
+*.txt
+downloaded_htaccess.txt
+downloaded_passenger_wsgi.py
