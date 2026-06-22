@@ -41,16 +41,49 @@ class SyncASGIAdapter:
         if path == "/api/diag":
             output = []
             output.append(f"Python Version: {sys.version}")
+            
+            import shutil
+            import subprocess
+            
+            python_path = '/home/djucnxxj/virtualenv/tlc_backend/3.11/bin/python'
+            site_packages = '/home/djucnxxj/virtualenv/tlc_backend/3.11/lib/python3.11/site-packages'
+            
+            # Step 1: Delete corrupted pip directories
+            output.append("=== Deleting corrupted pip directories ===")
+            pip_dir = os.path.join(site_packages, 'pip')
+            if os.path.exists(pip_dir):
+                output.append(f"Deleting {pip_dir}...")
+                shutil.rmtree(pip_dir, ignore_errors=True)
             try:
-                import pandas as pd
-                output.append(f"pandas version: {pd.__version__} (file: {pd.__file__})")
-            except Exception as e:
-                output.append(f"pandas import failed: {e}\n{traceback.format_exc()}")
+                for d in os.listdir(site_packages):
+                    if d.startswith('pip-') and d.endswith('.dist-info'):
+                        d_path = os.path.join(site_packages, d)
+                        output.append(f"Deleting {d_path}...")
+                        shutil.rmtree(d_path, ignore_errors=True)
+            except Exception as list_err:
+                output.append(f"Failed to list site-packages: {list_err}")
+            
+            # Step 2: Repair pip via ensurepip
+            output.append("=== Repairing pip via ensurepip ===")
+            cmd_repair = [python_path, '-m', 'ensurepip', '--default-pip', '--upgrade']
             try:
-                import yfinance as yf
-                output.append(f"yfinance version: {yf.__version__} (file: {yf.__file__})")
+                res = subprocess.run(cmd_repair, capture_output=True, text=True, timeout=120)
+                output.append(f"Ensurepip STDOUT:\n{res.stdout}")
+                output.append(f"Ensurepip STDERR:\n{res.stderr}")
+                output.append(f"Ensurepip Exit code: {res.returncode}")
             except Exception as e:
-                output.append(f"yfinance import failed: {e}\n{traceback.format_exc()}")
+                output.append(f"Failed to run ensurepip: {e}")
+                
+            # Step 3: Install pandas and yfinance
+            output.append("=== Installing pandas and yfinance ===")
+            cmd_install = [python_path, '-m', 'pip', 'install', '--force-reinstall', 'pandas', 'yfinance']
+            try:
+                res = subprocess.run(cmd_install, capture_output=True, text=True, timeout=180)
+                output.append(f"Pip Install STDOUT:\n{res.stdout}")
+                output.append(f"Pip Install STDERR:\n{res.stderr}")
+                output.append(f"Pip Install Exit code: {res.returncode}")
+            except Exception as e:
+                output.append(f"Failed to run pip install: {e}")
                 
             start_response("200 OK", [("content-type", "text/plain")])
             return ["\n".join(output).encode('utf-8')]

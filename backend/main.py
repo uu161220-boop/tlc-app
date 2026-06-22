@@ -200,6 +200,10 @@ def sync_stock_api(ticker: str, timeframe: str = Query("d1", description="m5, m1
         if df.empty:
             raise Exception("No data returned from Yahoo Finance.")
             
+        import pandas as pd
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+            
         raw_prices = []
         for date, row in df.iterrows():
             try:
@@ -207,15 +211,11 @@ def sync_stock_api(ticker: str, timeframe: str = Query("d1", description="m5, m1
                 h = float(row['High'])
                 l = float(row['Low'])
                 c = float(row['Close'])
-                ac = float(row['Adj Close']) if 'Adj Close' in row else float(row['Close'])
-                v = int(row['Volume'])
-            except Exception:
-                o = float(row.iloc[0])
-                h = float(row.iloc[1])
-                l = float(row.iloc[2])
-                c = float(row.iloc[3])
-                ac = float(row.iloc[4])
-                v = int(row.iloc[5])
+                ac = float(row['Adj Close']) if 'Adj Close' in row and not pd.isna(row['Adj Close']) else c
+                v = int(row['Volume']) if 'Volume' in row and not pd.isna(row['Volume']) else 0
+            except Exception as row_err:
+                # Skip invalid rows instead of crashing
+                continue
                 
             if math.isnan(o) or math.isnan(h) or math.isnan(l) or math.isnan(c):
                 continue
