@@ -20,6 +20,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState(null);
+  const [isAutoSync, setIsAutoSync] = useState(true); // default to enabled
+  const [isSilentSyncing, setIsSilentSyncing] = useState(false);
   
   // Auth state — null = not logged in
   const [currentUser, setCurrentUser] = useState(null);
@@ -50,6 +52,37 @@ export default function App() {
       .catch(() => sessionStorage.removeItem('tlc_token'))
       .finally(() => setAuthChecked(true));
   }, []);
+
+  // Real-time Auto Sync effect
+  useEffect(() => {
+    if (!isAutoSync || !selectedStock) return;
+
+    const intervalId = setInterval(async () => {
+      if (isSyncing || isSilentSyncing) return;
+      
+      setIsSilentSyncing(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/stocks/${selectedStock.ticker}/sync?timeframe=${timeframe}`, {
+          method: 'POST'
+        });
+        const result = await response.json();
+        if (response.ok && result.status !== 'error') {
+          // Silent reload chart data
+          const chartResponse = await fetch(`${API_BASE_URL}/api/stocks/${selectedStock.ticker}/chart?timeframe=${timeframe}`);
+          if (chartResponse.ok) {
+            const data = await chartResponse.json();
+            setChartData(data);
+          }
+        }
+      } catch (err) {
+        console.error("Auto sync failed:", err);
+      } finally {
+        setIsSilentSyncing(false);
+      }
+    }, 10000); // sync every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [isAutoSync, selectedStock?.ticker, timeframe, isSyncing, isSilentSyncing]);
 
   // Fetch stocks on mount
   useEffect(() => {
@@ -339,6 +372,8 @@ export default function App() {
               isSyncing={isSyncing}
               onSync={handleSyncData}
               onTrade={handleTrade}
+              isAutoSync={isAutoSync}
+              onToggleAutoSync={setIsAutoSync}
             />
 
             <ErrorBoundary>

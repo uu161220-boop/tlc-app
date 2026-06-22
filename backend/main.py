@@ -106,6 +106,25 @@ def logout(request: Request, response: Response):
 def read_root():
     return {"message": "Indonesian Stock Market API with Timeframes is running!"}
 
+@app.get("/api/diag")
+def get_diag():
+    import sys
+    import os
+    import traceback
+    output = []
+    output.append(f"Python Version: {sys.version}")
+    try:
+        import pandas as pd
+        output.append(f"pandas version: {pd.__version__} (file: {pd.__file__})")
+    except Exception as e:
+        output.append(f"pandas import failed: {e}\n{traceback.format_exc()}")
+    try:
+        import yfinance as yf
+        output.append(f"yfinance version: {yf.__version__} (file: {yf.__file__})")
+    except Exception as e:
+        output.append(f"yfinance import failed: {e}\n{traceback.format_exc()}")
+    return Response(content="\n".join(output), media_type="text/plain")
+
 @app.get("/api/stocks", response_model=list[StockResponse])
 def get_stocks_api():
     try:
@@ -165,8 +184,17 @@ def sync_stock_api(ticker: str, timeframe: str = Query("d1", description="m5, m1
         interval, period = tf_mapping[timeframe]
         
         if timeframe in ["d1", "mn"]:
-            today_str = datetime.date.today().strftime("%Y-%m-%d")
-            df = yf.download(ticker_upper, start="2016-01-01", end=today_str, interval=interval)
+            last_date_str = db.get_latest_price_date(stock_id, timeframe)
+            if last_date_str:
+                try:
+                    last_date = datetime.datetime.strptime(last_date_str.split()[0], "%Y-%m-%d").date()
+                    delta_days = 60 if timeframe == "mn" else 5
+                    start_date_str = (last_date - datetime.timedelta(days=delta_days)).strftime("%Y-%m-%d")
+                except Exception:
+                    start_date_str = "2016-01-01"
+            else:
+                start_date_str = "2016-01-01"
+            df = yf.download(ticker_upper, start=start_date_str, interval=interval)
         else:
             df = yf.download(ticker_upper, period=period, interval=interval)
         if df.empty:

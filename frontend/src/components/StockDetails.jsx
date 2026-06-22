@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function StockDetails({ ticker, name, data, isSyncing, onSync, onTrade }) {
+export default function StockDetails({ ticker, name, data, isSyncing, onSync, onTrade, isAutoSync, onToggleAutoSync }) {
   const [tradeLots, setTradeLots] = useState(1);
 
   if (!data || data.length === 0) {
@@ -61,6 +61,16 @@ export default function StockDetails({ ticker, name, data, isSyncing, onSync, on
               Jual
             </button>
           </div>
+
+          <label className="realtime-toggle" title="Pantau harga realtime (Auto-sync 10s)">
+            <input
+              type="checkbox"
+              checked={isAutoSync || false}
+              onChange={(e) => onToggleAutoSync(e.target.checked)}
+            />
+            {isAutoSync && <span className="pulse-dot"></span>}
+            <span>Realtime</span>
+          </label>
 
           <button 
             onClick={onSync} 

@@ -246,6 +246,24 @@ def get_historical_prices(stock_id, timeframe="d1"):
         conn.close()
 
 
+def get_latest_price_date(stock_id, timeframe="d1"):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT date FROM historical_prices
+                WHERE stock_id = %s AND timeframe = %s
+                ORDER BY date DESC LIMIT 1
+                """,
+                (stock_id, timeframe),
+            )
+            row = cur.fetchone()
+            return row["date"] if row else None
+    finally:
+        conn.close()
+
+
 # ─── Portfolio helpers ────────────────────────────────────────────────────────
 
 def get_cash_balance():
